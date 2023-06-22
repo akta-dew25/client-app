@@ -45,83 +45,77 @@ const PreviewPlanSnippet = () => {
   const numCheckboxes = previewPlan[0]?.entitlements.length;
   const totalHeight = checkboxHeight * numCheckboxes;
   const [getCustomer, setGetCustomer] = useState([]);
+  const [productId, setProductId] = useState("");
   const [serParams, _] = useSearchParams();
 
   useEffect(() => {
     let apiKey = window.location.search.split("=")[1];
-    getSubscription(apiKey);
+    getPlanList(apiKey);
   }, []);
 
-  const getSubscription = (apiKey) => {
+  useEffect(() => {
+    if (productId) {
+      getAllCustomer();
+    }
+  }, [productId]);
+
+  const getPlanList = async (apiKey) => {
     const headers = {
       //Paste the API key here:
       Authorization: apiKey,
     };
-    const getPlanList = async () => {
-      setLoading(true);
-      try {
-        let allPlans = await axios.get(
-          `https://ss.api.hutechlabs.com/api/v1/previewPlans`,
-          {
-            headers: headers,
+    setLoading(true);
+    try {
+      let allPlans = await axios.get(
+        `https://ss.api.hutechlabs.com/api/v1/previewPlans`,
+        {
+          headers: headers,
+        }
+      );
+      const tenantIds = allPlans?.data?.tenantId;
+      const productIds = allPlans?.data?.productId;
+      console.log("planlist;;;", allPlans?.data?.plans, tenantIds, productIds);
+      setProductId(productIds);
+
+      const finalplans = [];
+      allPlans?.data?.plans.forEach((pl) => {
+        const addedFeatures = [];
+        const myplans = [];
+        pl?.entitlements.forEach((feature) => {
+          if (!addedFeatures?.includes(feature?.entitlements)) {
+            myplans.push(feature);
+            addedFeatures.push(feature?.entitlements);
           }
-        );
-        const tenantIds = allPlans?.data?.tenantId;
-        const productIds = allPlans?.data?.productId;
-        console.log(
-          "planlist;;;",
-          allPlans?.data?.plans,
-          tenantIds,
-          productIds
-        );
-
-        localStorage.setItem("TENANT_ID", JSON.stringify(tenantIds));
-        localStorage.setItem("productIds", JSON.stringify(productIds));
-
-        const finalplans = [];
-        allPlans?.data?.plans.forEach((pl) => {
-          const addedFeatures = [];
-          const myplans = [];
-          pl?.entitlements.forEach((feature) => {
-            if (!addedFeatures?.includes(feature?.entitlements)) {
-              myplans.push(feature);
-              addedFeatures.push(feature?.entitlements);
-            }
-          });
-          finalplans.push({ ...pl, entitlements: myplans });
         });
+        finalplans.push({ ...pl, entitlements: myplans });
+      });
 
-        const a = Object.assign(
-          [],
-          ...finalplans?.map((i) => i.response?.map((i) => i.periodInText))
-        );
+      const a = Object.assign(
+        [],
+        ...finalplans?.map((i) => i.response?.map((i) => i.periodInText))
+      );
 
-        setPreviewPlan(finalplans || []);
-        setSelectedPrice(a[0]);
-        const timer = setTimeout(() => {
-          setLoading(false);
-        }, 750);
-      } catch (error) {
-        console.log("error;;;", error);
-      }
-    };
-    const getAllCustomer = async () => {
-      const productId = JSON.parse(localStorage.getItem("productIds"));
-      console.log(productId);
-      try {
-        let customer = await axios.get(
-          `https://ss.api.hutechlabs.com/api/v1/product/${productId}`,
-          { headers: { "Cache-Control": "no-cache" } }
-        );
-        setGetCustomer(customer?.data);
-      } catch (error) {
-        message.error("error");
-      }
-    };
-
-    getPlanList();
-    getAllCustomer();
+      setPreviewPlan(finalplans || []);
+      setSelectedPrice(a[0]);
+      const timer = setTimeout(() => {
+        setLoading(false);
+      }, 750);
+    } catch (error) {
+      console.log("error;;;", error);
+    }
   };
+  const getAllCustomer = async () => {
+    try {
+      let customer = await axios.get(
+        `https://ss.api.hutechlabs.com/api/v1/product/${productId}`,
+        { headers: { "Cache-Control": "no-cache" } }
+      );
+      setGetCustomer(customer?.data);
+    } catch (error) {
+      message.error("error");
+    }
+  };
+
   console.log("customerss", getCustomer);
 
   const navigate = useNavigate();
