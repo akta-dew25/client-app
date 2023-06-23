@@ -3,10 +3,12 @@ import { Form, Input, Col, Button, Row, Spin, message } from "antd";
 import axios from "axios";
 
 const GetStartedSnippet = (props) => {
-  console.log(props);
+  console.log(props.getCustomer);
   const [form] = Form.useForm();
+  const [subId, setSubId] = useState(null);
   const TenantId = JSON.parse(localStorage.getItem("TENANT_ID"));
   const productId = JSON.parse(localStorage.getItem("productIds"));
+  const customerDetails = JSON.parse(localStorage.getItem("customerLogin"));
   console.log("eeeee", productId, TenantId);
   const [isLoading, setIsLoading] = useState(false);
   let array = props?.previewPlan?.find(
@@ -15,9 +17,16 @@ const GetStartedSnippet = (props) => {
   let priceSlab = array?.response?.find(
     (priceId) => priceId?.periodInText === props?.selectedPrice
   );
+  useEffect(() => {
+    let getCustData = props?.getCustomer.find(
+      (cust) => cust.customerEmail === customerDetails.email
+    );
+    setSubId(getCustData?.subscriptionId);
+  }, [subId]);
 
   const onFinish = async (values) => {
     setIsLoading(true);
+
     let subcriptionData = {
       firstname: values.firstname,
       lastname: values.lastname,
@@ -28,26 +37,38 @@ const GetStartedSnippet = (props) => {
         priceSlabId: priceSlab.priceSlabId,
       },
     };
-
-    try {
-      let response = await axios.post(
-        `https://ss.api.hutechlabs.com/api/v1/tenants/${TenantId}/products/${productId}/subscription`,
-        subcriptionData
-      );
-      setIsLoading(false);
-      props.onCancel();
-      form.resetFields();
-      message.success("Subcription Created Sucessfully");
-    } catch (error) {
-      console.log("error");
+    if (subId) {
+      try {
+        await axios.put(
+          `https://ss.api.hutechlabs.com/api/v1/tenant/${TenantId}/product/${productId}/subscription/${subId}`,
+          subcriptionData
+        );
+        setIsLoading(false);
+        props.onCancel();
+        form.resetFields();
+        message.success("Subscription updated successfully");
+      } catch (error) {}
+    } else {
+      try {
+        await axios.post(
+          `https://ss.api.hutechlabs.com/api/v1/tenants/${TenantId}/products/${productId}/subscription`,
+          subcriptionData
+        );
+        setIsLoading(false);
+        props.onCancel();
+        form.resetFields();
+        message.success("Subcription Created Sucessfully");
+      } catch (error) {
+        console.log("error");
+      }
     }
   };
   useEffect(() => {
     form.setFieldsValue({
-      firstname: props?.customerLogin?.fname,
-      lastname: props?.customerLogin?.lname,
-      email: props?.customerLogin?.email,
-      contactNumber: props?.customerLogin?.contact,
+      firstname: props?.customerLogin?.fname || customerDetails?.fname,
+      lastname: props?.customerLogin?.lname || customerDetails?.lname,
+      email: props?.customerLogin?.email || customerDetails?.email,
+      contactNumber: props?.customerLogin?.contact || customerDetails?.contact,
       subscriptionDto: {
         planId: array?.planTitle,
         priceSlabId:

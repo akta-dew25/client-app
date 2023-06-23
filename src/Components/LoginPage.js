@@ -14,6 +14,10 @@ const LoginPage = (props) => {
   const [existingCustomer, setExistingCustomer] = useState(false);
   //   const [customerDetails, setCustomerDetails] = useState(props.getAllCustomer);
 
+  useEffect(() => {
+    getFilterCustomer();
+  }, [existingCustomer]);
+
   const onFinish = (values) => {
     let customerLogin = {
       fname: values.fname,
@@ -28,13 +32,12 @@ const LoginPage = (props) => {
     setSubcription(true);
   };
 
-  useEffect(() => {
-    const filterCustomer = props.getAllCustomer.some(
+  const getFilterCustomer = () => {
+    const filterCustomer = props?.getAllCustomer?.some(
       (cust) => cust.customerEmail === currentCustomer.email
     );
     setExistingCustomer(filterCustomer);
-  }, [existingCustomer]);
-
+  };
   console.log("testingg", existingCustomer);
 
   return (
@@ -54,7 +57,7 @@ const LoginPage = (props) => {
           <Title level={2} style={{ textAlign: "center", marginBottom: 24 }}>
             Login
           </Title>
-          <Form name="login" onFinish={onFinish} layout="vertical">
+          <Form name="login" onFinish={onFinish} layout="vertical" form={form}>
             <Form.Item
               name="fname"
               label="First Name"
@@ -113,7 +116,11 @@ const LoginPage = (props) => {
         </div>
       </div>
       <Modal
-        title={"Create Subcription"}
+        title={
+          existingCustomer
+            ? "Upgrade/Downgrade Subcription"
+            : "Create Subscription"
+        }
         footer={null}
         open={subcription}
         onOk={() => setSubcription(false)}
@@ -139,7 +146,28 @@ const LoginPage = (props) => {
         className="viewModal"
       >
         {existingCustomer ? (
-          <h1>testing</h1>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <h1>You can upgrade or downgrade your subscription plan</h1>
+
+            <Button
+              style={{
+                width: "97px",
+                marginTop: "5rem",
+                background:
+                  "linear-gradient(121.06deg, #5b92e5 20.17%, #2087c0 95.26%",
+                color: "#ffffff",
+              }}
+              onClick={() => setSubcription(false)}
+            >
+              Ok
+            </Button>
+          </div>
         ) : (
           <GetStartedSnippet
             onCancel={() => setSubcription(false)}

@@ -24,9 +24,8 @@ const App = (props) => {
   const [selectedKey, setSelectedKey] = useState(
     localStorage.getItem("selectedkey") || "home"
   );
-  const [loggedIn, setLoggedIn] = useState(false);
   const navigate = useNavigate();
-  //   const keys = localStorage.setItem("selectedKey", selectedKey);
+  //   const keys = ("selectedKey", selectedKey);
   //   useEffect(() => {
   //     navigate("/");
   //   });
@@ -37,22 +36,9 @@ const App = (props) => {
     // Perform any other logic based on the selected key
   };
 
-  useEffect(() => {
-    const fname = localStorage.getItem("fname");
-    if (fname) {
-      setLoggedIn(true);
-    }
-  }, []);
-
-  const handleLogin = () => {
-    setLoggedIn(true);
-    navigate("/login");
-  };
-
   const handleLogout = () => {
-    localStorage.removeItem("fname");
-    localStorage.removeItem("headers");
-    setLoggedIn(false);
+    localStorage.removeItem("customerLogin");
+    localStorage.removeItem("selectedkey");
     navigate("/");
     // setSelectedKey('subscription')
   };

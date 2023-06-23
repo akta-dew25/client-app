@@ -29,6 +29,7 @@ import "swiper/css/navigation";
 import "swiper/css";
 import "swiper/css/pagination";
 import { Keyboard, Pagination, Navigation } from "swiper";
+import locale from "antd/es/date-picker/locale/en_US";
 
 const PreviewPlanSnippet = () => {
   const [visible, setVisible] = useState(false);
@@ -46,6 +47,7 @@ const PreviewPlanSnippet = () => {
   const totalHeight = checkboxHeight * numCheckboxes;
   const [getCustomer, setGetCustomer] = useState([]);
   const [productId, setProductId] = useState("");
+  const [customerDetails, setCustomerDetails] = useState({});
   const [serParams, _] = useSearchParams();
 
   useEffect(() => {
@@ -94,9 +96,11 @@ const PreviewPlanSnippet = () => {
         [],
         ...finalplans?.map((i) => i.response?.map((i) => i.periodInText))
       );
+      let parseData = JSON.parse(localStorage.getItem("customerLogin") || null);
 
       setPreviewPlan(finalplans || []);
       setSelectedPrice(a[0]);
+      setCustomerDetails(parseData);
       const timer = setTimeout(() => {
         setLoading(false);
       }, 750);
@@ -104,6 +108,7 @@ const PreviewPlanSnippet = () => {
       console.log("error;;;", error);
     }
   };
+  console.log("customerdetahshsh", customerDetails);
   const getAllCustomer = async () => {
     try {
       let customer = await axios.get(
@@ -848,8 +853,13 @@ const PreviewPlanSnippet = () => {
           </Swiper>
         </Col>
       </div>
+
       <Modal
-        title={"Customer Login"}
+        title={
+          customerDetails === null
+            ? "Customer Login"
+            : "Upgrade/Downgrade Subscription"
+        }
         footer={null}
         open={customerLogin}
         onOk={() => setCustomerLogin(false)}
@@ -874,14 +884,25 @@ const PreviewPlanSnippet = () => {
         }
         className="viewModal"
       >
-        <LoginPage
-          onCancel={() => setCustomerLogin(false)}
-          setCustomerLogin={setCustomerLogin}
-          getAllCustomer={getCustomer}
-          previewPlan={previewPlan}
-          selectedPlan={selectedPlan}
-          selectedPrice={selectedPrice}
-        />
+        {customerDetails === null ? (
+          <LoginPage
+            onCancel={() => setCustomerLogin(false)}
+            setCustomerLogin={setCustomerLogin}
+            getAllCustomer={getCustomer}
+            previewPlan={previewPlan}
+            selectedPlan={selectedPlan}
+            selectedPrice={selectedPrice}
+            customerDetails={customerDetails}
+          />
+        ) : (
+          <GetStartedSnippet
+            onCancel={() => setCustomerLogin(false)}
+            getCustomer={getCustomer}
+            previewPlan={previewPlan}
+            selectedPlan={selectedPlan}
+            selectedPrice={selectedPrice}
+          />
+        )}
       </Modal>
 
       <Modal
