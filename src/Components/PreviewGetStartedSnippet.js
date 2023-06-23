@@ -3,6 +3,7 @@ import { Form, Input, Col, Button, Row, Spin, message } from "antd";
 import axios from "axios";
 
 const GetStartedSnippet = (props) => {
+  console.log(props);
   const [form] = Form.useForm();
   const TenantId = JSON.parse(localStorage.getItem("TENANT_ID"));
   const productId = JSON.parse(localStorage.getItem("productIds"));
@@ -43,10 +44,10 @@ const GetStartedSnippet = (props) => {
   };
   useEffect(() => {
     form.setFieldsValue({
-      firstname: localStorage.getItem("fname"),
-      lastname: localStorage.getItem("lname"),
-      email: localStorage.getItem("email"),
-      contactNumber: localStorage.getItem("contact"),
+      firstname: props?.customerLogin?.fname,
+      lastname: props?.customerLogin?.lname,
+      email: props?.customerLogin?.email,
+      contactNumber: props?.customerLogin?.contact,
       subscriptionDto: {
         planId: array?.planTitle,
         priceSlabId:

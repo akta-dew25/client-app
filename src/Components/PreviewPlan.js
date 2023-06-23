@@ -876,9 +876,11 @@ const PreviewPlanSnippet = () => {
       >
         <LoginPage
           onCancel={() => setCustomerLogin(false)}
-          // previewPlan={previewPlan}
-          // selectedPlan={selectedPlan}
-          // selectedPrice={selectedPrice}
+          setCustomerLogin={setCustomerLogin}
+          getAllCustomer={getCustomer}
+          previewPlan={previewPlan}
+          selectedPlan={selectedPlan}
+          selectedPrice={selectedPrice}
         />
       </Modal>
 

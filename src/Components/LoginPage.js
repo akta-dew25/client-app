@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form, Input, Button, Typography, message, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import bghero from "../Image/bg-hero.jpg";
@@ -6,18 +6,36 @@ import GetStartedSnippet from "./PreviewGetStartedSnippet";
 
 const { Title } = Typography;
 
-const LoginPage = () => {
+const LoginPage = (props) => {
   const navigate = useNavigate();
+  const [form] = Form.useForm();
   const [subcription, setSubcription] = useState(false);
+  const [currentCustomer, setCurrentCustomer] = useState({});
+  const [existingCustomer, setExistingCustomer] = useState(false);
+  //   const [customerDetails, setCustomerDetails] = useState(props.getAllCustomer);
 
   const onFinish = (values) => {
-    console.log("Received values:", values);
-    localStorage.setItem("fname", values.fname);
-    localStorage.setItem("lname", values.lname);
-    localStorage.setItem("email", values.email);
-    localStorage.setItem("contact", values.contact);
+    let customerLogin = {
+      fname: values.fname,
+      lname: values.lname,
+      email: values.email,
+      contact: values.contact,
+    };
+    setCurrentCustomer(customerLogin);
+    localStorage.setItem("customerLogin", JSON.stringify(currentCustomer));
+    form.resetFields();
+    props.setCustomerLogin(false);
     setSubcription(true);
   };
+
+  useEffect(() => {
+    const filterCustomer = props.getAllCustomer.some(
+      (cust) => cust.customerEmail === currentCustomer.email
+    );
+    setExistingCustomer(filterCustomer);
+  }, [existingCustomer]);
+
+  console.log("testingg", existingCustomer);
 
   return (
     <>
@@ -120,12 +138,17 @@ const LoginPage = () => {
         }
         className="viewModal"
       >
-        <GetStartedSnippet
-          onCancel={() => setSubcription(false)}
-          //   previewPlan={previewPlan}
-          //   selectedPlan={selectedPlan}
-          //   selectedPrice={selectedPrice}
-        />
+        {existingCustomer ? (
+          <h1>testing</h1>
+        ) : (
+          <GetStartedSnippet
+            onCancel={() => setSubcription(false)}
+            customerLogin={currentCustomer}
+            previewPlan={props.previewPlan}
+            selectedPlan={props.selectedPlan}
+            selectedPrice={props.selectedPrice}
+          />
+        )}
       </Modal>
     </>
   );
