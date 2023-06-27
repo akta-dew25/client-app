@@ -366,11 +366,13 @@
   border-radius: 10px 10px 0px 0px;
   background: linear-gradient(121.06deg, #5b92e5 20.17%, #2087c0 95.26%);
   color: #ffffff;
+  padding: 10px;
+  margin-bottom: 0px;
 }
 .viewModal .ant-modal-title {
   color: #ffffff;
-  font-weight: 400;
-  font-size: 18px;
+  font-weight: 500;
+  font-size: 19px;
   line-height: 25px;
 }
 
@@ -491,9 +493,19 @@ pre {
 .viewModal.ant-modal .ant-modal-content {
   padding: 0px;
 }
-.viewModal.ant-modal .ant-modal-body {
+/* .viewModal.ant-modal .ant-modal-body {
   padding: 20px;
+} */
+
+.customerDetails .ant-form-item-label >label{
+  font-weight: 500;
 }
+
+.my-form .ant-form-item-label >label{
+  font-weight: 500;
+}
+
+
 @media only screen and (max-width: 480px) {
   .swiper-button-next:after, .swiper-button-prev:after {
   margin-left: 23px;

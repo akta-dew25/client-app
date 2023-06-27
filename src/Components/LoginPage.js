@@ -10,13 +10,14 @@ const LoginPage = (props) => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [subcription, setSubcription] = useState(false);
+  const [planIds, setPlanIds] = useState();
   const [currentCustomer, setCurrentCustomer] = useState({});
   const [existingCustomer, setExistingCustomer] = useState(false);
   //   const [customerDetails, setCustomerDetails] = useState(props.getAllCustomer);
 
   useEffect(() => {
     getFilterCustomer();
-  }, [existingCustomer]);
+  }, [currentCustomer, planIds]);
 
   const onFinish = (values) => {
     let customerLogin = {
@@ -26,7 +27,7 @@ const LoginPage = (props) => {
       contact: values.contact,
     };
     setCurrentCustomer(customerLogin);
-    localStorage.setItem("customerLogin", JSON.stringify(currentCustomer));
+    localStorage.setItem("customerLogin", JSON.stringify(customerLogin));
     form.resetFields();
     props.setCustomerLogin(false);
     setSubcription(true);
@@ -37,8 +38,22 @@ const LoginPage = (props) => {
       (cust) => cust.customerEmail === currentCustomer.email
     );
     setExistingCustomer(filterCustomer);
+    const filterplanId = props?.getAllCustomer?.some(
+      (id) => id.planId === props.selectedPlan
+    );
+
+    console.log(filterplanId);
+    setPlanIds(filterplanId);
   };
-  console.log("testingg", existingCustomer);
+  console.log(
+    "testingg",
+    existingCustomer,
+    planIds,
+    props.subStatus,
+    props.previewPlan,
+    props.selectedPlan,
+    props.getAllCustomer.some((id) => id.subscriptionStatus === false)
+  );
 
   return (
     <>
@@ -47,7 +62,6 @@ const LoginPage = (props) => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          height: "100vh",
           backgroundImage: `url(${bghero})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
@@ -67,6 +81,7 @@ const LoginPage = (props) => {
                   message: "Please enter your first name",
                 },
               ]}
+              className="customerDetails"
             >
               <Input placeholder="First Name" />
             </Form.Item>
@@ -79,6 +94,7 @@ const LoginPage = (props) => {
                   message: "Please enter your last name",
                 },
               ]}
+              className="customerDetails"
             >
               <Input placeholder="Last Name" />
             </Form.Item>
@@ -91,6 +107,7 @@ const LoginPage = (props) => {
                   message: "Please enter your email!",
                 },
               ]}
+              className="customerDetails"
             >
               <Input placeholder="Email" />
             </Form.Item>
@@ -103,12 +120,18 @@ const LoginPage = (props) => {
                   message: "Please enter your password!",
                 },
               ]}
+              className="customerDetails"
             >
               <Input placeholder="Password" />
             </Form.Item>
 
             <Form.Item>
-              <Button type="primary" htmlType="submit" block>
+              <Button
+                type="primary"
+                htmlType="submit"
+                block
+                style={{ fontSize: "14px", fontWeight: "500" }}
+              >
                 Log in
               </Button>
             </Form.Item>
@@ -117,9 +140,11 @@ const LoginPage = (props) => {
       </div>
       <Modal
         title={
-          existingCustomer
+          existingCustomer && props.subStatus
             ? "Upgrade/Downgrade Subcription"
-            : "Create Subscription"
+            : props.subStatus === false && existingCustomer
+            ? null
+            : "Create Subscriptions"
         }
         footer={null}
         open={subcription}
@@ -127,12 +152,23 @@ const LoginPage = (props) => {
         onCancel={() => setSubcription(false)}
         width={580}
         style={{ borderRadius: "10px" }}
-        bodyStyle={{
-          overflowX: "hidden",
-          // overflowY: "hidden",
-          borderRadius: "10px",
-          height: "350px",
-        }}
+        bodyStyle={
+          existingCustomer
+            ? {
+                overflowX: "hidden",
+                // overflowY: "hidden",
+                borderRadius: "10px",
+                height: "350px",
+                padding: "2rem",
+              }
+            : {
+                overflowX: "hidden",
+                // overflowY: "hidden",
+                borderRadius: "10px",
+                height: "350px",
+                padding: "2rem",
+              }
+        }
         closeIcon={
           <div
             onClick={() => {
@@ -145,7 +181,7 @@ const LoginPage = (props) => {
         }
         className="viewModal"
       >
-        {existingCustomer ? (
+        {existingCustomer && planIds && props.subStatus === true ? (
           <div
             style={{
               display: "flex",
@@ -168,6 +204,32 @@ const LoginPage = (props) => {
               Ok
             </Button>
           </div>
+        ) : existingCustomer && planIds && props.subStatus === false ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <h1>
+              You can't upgrade or downgrade your subscription plan through this
+              plan
+            </h1>
+
+            <Button
+              style={{
+                width: "97px",
+                marginTop: "5rem",
+                background:
+                  "linear-gradient(121.06deg, #5b92e5 20.17%, #2087c0 95.26%",
+                color: "#ffffff",
+              }}
+              onClick={() => setSubcription(false)}
+            >
+              Ok
+            </Button>
+          </div>
         ) : (
           <GetStartedSnippet
             onCancel={() => setSubcription(false)}
@@ -175,6 +237,10 @@ const LoginPage = (props) => {
             previewPlan={props.previewPlan}
             selectedPlan={props.selectedPlan}
             selectedPrice={props.selectedPrice}
+            tenantId={props.tenantId}
+            productId={props.productId}
+            subId={props?.subId}
+            subStatus={props?.subStatus}
           />
         )}
       </Modal>

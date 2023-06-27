@@ -5,43 +5,36 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 const { Header, Content, Footer } = Layout;
 
 const items = [
-  { key: "home", label: "Home", to: "/" },
+  { key: "/", label: "Home", to: "/" },
   // ...(loggedIn
   //   ?
   //    [
   {
-    key: "subscription",
+    key: "/subscription",
     label: "Subscription",
     to: "/subscription?apikey=",
   },
   // ]
   //   : [{ key: "subscription", label: "Subscription", to: "/login" }]),
-  { key: "contact", label: "Contact", to: "/contact" },
+  { key: "/contact", label: "Contact", to: "/contact" },
 ];
 const App = (props) => {
   console.log("propss", props);
   const location = useLocation();
   const [selectedKey, setSelectedKey] = useState(
-    localStorage.getItem("selectedkey") || "home"
+    localStorage.getItem("selectedkey") || location.key
   );
   const navigate = useNavigate();
-  //   const keys = ("selectedKey", selectedKey);
-  //   useEffect(() => {
-  //     navigate("/");
-  //   });
-
-  const handleItemClick = (key) => {
-    setSelectedKey(key);
-    localStorage.setItem("selectedkey", key);
-    // Perform any other logic based on the selected key
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("customerLogin");
     localStorage.removeItem("selectedkey");
     navigate("/");
-    // setSelectedKey('subscription')
   };
+
+  useEffect(() => {
+    setSelectedKey(location.pathname);
+  }, [location.pathname]);
 
   return (
     <Layout>
@@ -78,8 +71,7 @@ const App = (props) => {
             <Menu
               theme="dark"
               mode="horizontal"
-              defaultSelectedKeys={selectedKey ? [selectedKey] : []}
-              onClick={({ key }) => handleItemClick(key)}
+              selectedKeys={selectedKey ? [selectedKey] : []}
             >
               {items.map((item) => (
                 <Menu.Item key={item.key} icon={item.icon}>

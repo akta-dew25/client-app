@@ -6,10 +6,10 @@ const GetStartedSnippet = (props) => {
   console.log(props.getCustomer);
   const [form] = Form.useForm();
   const [subId, setSubId] = useState(null);
-  const TenantId = JSON.parse(localStorage.getItem("TENANT_ID"));
-  const productId = JSON.parse(localStorage.getItem("productIds"));
+  // const TenantId = JSON.parse(localStorage.getItem("TENANT_ID"));
+  // const productId = JSON.parse(localStorage.getItem("productIds"));
   const customerDetails = JSON.parse(localStorage.getItem("customerLogin"));
-  console.log("eeeee", productId, TenantId);
+  // console.log("eeeee", props.productId, TenantId);
   const [isLoading, setIsLoading] = useState(false);
   let array = props?.previewPlan?.find(
     (id) => id?.planId === props?.selectedPlan
@@ -18,11 +18,13 @@ const GetStartedSnippet = (props) => {
     (priceId) => priceId?.periodInText === props?.selectedPrice
   );
   useEffect(() => {
-    let getCustData = props?.getCustomer.find(
-      (cust) => cust.customerEmail === customerDetails.email
+    let getCustData = props?.getCustomer?.find(
+      (cust) => cust?.customerEmail === customerDetails?.email
     );
     setSubId(getCustData?.subscriptionId);
   }, [subId]);
+  // console.log(subid);
+  console.log(subId, props.getCustomer, props.subId);
 
   const onFinish = async (values) => {
     setIsLoading(true);
@@ -37,24 +39,29 @@ const GetStartedSnippet = (props) => {
         priceSlabId: priceSlab.priceSlabId,
       },
     };
-    if (subId) {
+    if (props.getCustomer) {
       try {
         await axios.put(
-          `https://ss.api.hutechlabs.com/api/v1/tenant/${TenantId}/product/${productId}/subscription/${subId}`,
+          `https://ss.api.hutechlabs.com/api/v1/tenant/${props.tenantId}/product/${props.productId}/subscription/${props.subId}`,
           subcriptionData
         );
         setIsLoading(false);
         props.onCancel();
         form.resetFields();
         message.success("Subscription updated successfully");
-      } catch (error) {}
+      } catch (error) {
+        message.error("Subscription is already updated");
+        props.onCancel();
+      }
     } else {
       try {
         await axios.post(
-          `https://ss.api.hutechlabs.com/api/v1/tenants/${TenantId}/products/${productId}/subscription`,
+          `https://ss.api.hutechlabs.com/api/v1/tenants/${props.tenantId}/products/${props.productId}/subscription`,
           subcriptionData
         );
+
         setIsLoading(false);
+
         props.onCancel();
         form.resetFields();
         message.success("Subcription Created Sucessfully");

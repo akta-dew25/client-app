@@ -30,12 +30,15 @@ import "swiper/css";
 import "swiper/css/pagination";
 import { Keyboard, Pagination, Navigation } from "swiper";
 import locale from "antd/es/date-picker/locale/en_US";
+import { useCallback } from "react";
 
 const PreviewPlanSnippet = () => {
   const [visible, setVisible] = useState(false);
   const [customerLogin, setCustomerLogin] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(2);
   const [selectedPrice, setSelectedPrice] = useState();
+  const [subId, setSubId] = useState("");
+  const [subStatus, setSubStatus] = useState();
   const [selectedCurrency, setSelectedCurrency] = useState("INR");
   const [previewPlan, setPreviewPlan] = useState([]);
   const [isRotated, setIsRotated] = useState(false);
@@ -48,7 +51,9 @@ const PreviewPlanSnippet = () => {
   const [getCustomer, setGetCustomer] = useState([]);
   const [productId, setProductId] = useState("");
   const [customerDetails, setCustomerDetails] = useState({});
+  const [tenantId, setTenantId] = useState();
   const [serParams, _] = useSearchParams();
+  let parseData = JSON.parse(localStorage.getItem("customerLogin") || null);
 
   useEffect(() => {
     let apiKey = window.location.search.split("=")[1];
@@ -78,7 +83,7 @@ const PreviewPlanSnippet = () => {
       const productIds = allPlans?.data?.productId;
       console.log("planlist;;;", allPlans?.data?.plans, tenantIds, productIds);
       setProductId(productIds);
-
+      setTenantId(tenantIds);
       const finalplans = [];
       allPlans?.data?.plans.forEach((pl) => {
         const addedFeatures = [];
@@ -96,11 +101,9 @@ const PreviewPlanSnippet = () => {
         [],
         ...finalplans?.map((i) => i.response?.map((i) => i.periodInText))
       );
-      let parseData = JSON.parse(localStorage.getItem("customerLogin") || null);
 
       setPreviewPlan(finalplans || []);
       setSelectedPrice(a[0]);
-      setCustomerDetails(parseData);
       const timer = setTimeout(() => {
         setLoading(false);
       }, 750);
@@ -108,20 +111,29 @@ const PreviewPlanSnippet = () => {
       console.log("error;;;", error);
     }
   };
-  console.log("customerdetahshsh", customerDetails);
-  const getAllCustomer = async () => {
+  console.log("customerdetahshsh", previewPlan);
+  // const getAllCustomer = async () => {
+
+  // };
+
+  const getAllCustomer = useCallback(async () => {
     try {
       let customer = await axios.get(
         `https://ss.api.hutechlabs.com/api/v1/product/${productId}`,
         { headers: { "Cache-Control": "no-cache" } }
       );
+      // message.info(JSON.stringify(customer.data), 10000);
       setGetCustomer(customer?.data);
     } catch (error) {
       message.error("error");
     }
-  };
+  }, [getCustomer, productId]);
 
-  console.log("customerss", getCustomer);
+  console.log(
+    "customerss",
+    getCustomer,
+    getCustomer.map((status) => status.subscriptionStatus)
+  );
 
   const navigate = useNavigate();
 
@@ -172,54 +184,6 @@ const PreviewPlanSnippet = () => {
   const [rightIndex, setRightIndex] = useState(previewPlan.length - 1);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const [cardWidth, setCardWidth] = useState(0);
-
-  // useEffect(() => {
-  //   const handleResize = () => {
-  //     setScreenWidth(window.innerWidth);
-  //     setScrollLeft(0);
-  //     setRightIndex(0);
-  //     // location.reload();
-  //     // setLoading(true);
-  //     setTimeout(() => {
-  //       setCardWidth(document.querySelector(".card-div").offsetWidth);
-  //       setLoading(false);
-  //     }, 100);
-  //   };
-  //   window.addEventListener("resize", handleResize);
-  //   return () => window.removeEventListener("resize", handleResize);
-  // }, [screenWidth]);
-
-  // const handleScrollLeft = () => {
-  //   const container = document.getElementById("tablespacePreview");
-  //   const cards = container.querySelectorAll(".card-div");
-  //   const cardWidth = cards[0].offsetWidth;
-  //   const containerWidth = container.offsetWidth;
-  //   const maxScrollLeft = container.scrollWidth - containerWidth;
-
-  //   if (scrollLeft > 0) {
-  //     setScrollLeft((prevScrollLeft) => prevScrollLeft - cardWidth);
-  //     setRightIndex((prevRightIndex) => prevRightIndex - 1);
-  //     cards.forEach((card) => {
-  //       card.style.transform = `translateX(-${scrollLeft - cardWidth}px)`;
-  //     });
-  //   }
-  // };
-
-  // const handleScrollRight = () => {
-  //   const container = document.getElementById("tablespacePreview");
-  //   const cards = container.querySelectorAll(".card-div");
-  //   const cardWidth = cards[0].offsetWidth;
-  //   const containerWidth = container.offsetWidth;
-  //   const maxScrollLeft = container.scrollWidth - containerWidth;
-
-  //   if (scrollLeft < maxScrollLeft) {
-  //     setScrollLeft((prevScrollLeft) => prevScrollLeft + cardWidth);
-  //     setRightIndex((prevRightIndex) => prevRightIndex + 1);
-  //     cards.forEach((card) => {
-  //       card.style.transform = `translateX(-${scrollLeft + cardWidth}px)`;
-  //     });
-  //   }
-  // };
 
   const TotalRight =
     screenWidth < 760
@@ -560,6 +524,7 @@ const PreviewPlanSnippet = () => {
                               borderRadius: "10px",
                               width: "80%",
                               marginBottom: "20px",
+                              marginLeft: "2.5rem",
                             }
                           : {
                               boxShadow: "rgba(0, 0, 0, 0.15) 0px 1px 10px",
@@ -832,8 +797,20 @@ const PreviewPlanSnippet = () => {
                             className="previewPlan-button-add"
                             onClick={() => {
                               handleSelectPlan(plan.planId);
-                              console.log(plan.planId, "Planiddd");
+
+                              const tempSubId = getCustomer.filter(
+                                (id) => id?.planId === plan?.planId
+                              );
+
+                              setSubId(
+                                getCustomer?.filter(
+                                  (c) => c?.subscriptionStatus
+                                )?.[0]?.subscriptionId
+                              );
+                              setSubStatus(tempSubId[0]?.subscriptionStatus);
+
                               setCustomerLogin(true);
+                              setCustomerDetails(parseData);
                             }}
                             style={
                               selectedPlan === plan.planId
@@ -858,7 +835,11 @@ const PreviewPlanSnippet = () => {
         title={
           customerDetails === null
             ? "Customer Login"
-            : "Upgrade/Downgrade Subscription"
+            : subStatus === false
+            ? null
+            : getCustomer
+            ? "Upgrade/Downgrade Subscription"
+            : null
         }
         footer={null}
         open={customerLogin}
@@ -866,12 +847,22 @@ const PreviewPlanSnippet = () => {
         onCancel={() => setCustomerLogin(false)}
         width={580}
         style={{ borderRadius: "10px" }}
-        bodyStyle={{
-          overflowX: "hidden",
-          // overflowY: "hidden",
-          borderRadius: "10px",
-          height: "350px",
-        }}
+        bodyStyle={
+          customerDetails === null
+            ? {
+                overflowX: "hidden",
+                // overflowY: "hidden",
+                borderRadius: "10px",
+                height: "350px",
+              }
+            : {
+                overflowX: "hidden",
+                // overflowY: "hidden",
+                borderRadius: "10px",
+                height: "350px",
+                padding: "2rem",
+              }
+        }
         closeIcon={
           <div
             onClick={() => {
@@ -893,7 +884,37 @@ const PreviewPlanSnippet = () => {
             selectedPlan={selectedPlan}
             selectedPrice={selectedPrice}
             customerDetails={customerDetails}
+            subId={subId}
+            tenantId={tenantId}
+            productId={productId}
+            planList={previewPlan}
+            subStatus={subStatus}
           />
+        ) : subStatus === false ? (
+          <h1>testing</h1>
+        ) : subStatus === true ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <h1>You can upgrade or downgrade your subscription plan</h1>
+
+            <Button
+              style={{
+                width: "97px",
+                marginTop: "5rem",
+                background:
+                  "linear-gradient(121.06deg, #5b92e5 20.17%, #2087c0 95.26%",
+                color: "#ffffff",
+              }}
+              onClick={() => setCustomerLogin(false)}
+            >
+              Ok
+            </Button>
+          </div>
         ) : (
           <GetStartedSnippet
             onCancel={() => setCustomerLogin(false)}
@@ -901,6 +922,11 @@ const PreviewPlanSnippet = () => {
             previewPlan={previewPlan}
             selectedPlan={selectedPlan}
             selectedPrice={selectedPrice}
+            tenantId={tenantId}
+            subId={subId}
+            productId={productId}
+            planList={previewPlan}
+            subStatus={subStatus}
           />
         )}
       </Modal>
