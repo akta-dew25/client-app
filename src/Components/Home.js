@@ -19,7 +19,6 @@ const items = [
   { key: "/contact", label: "Contact", to: "/contact" },
 ];
 const App = (props) => {
-  console.log("propss", props);
   const location = useLocation();
   const [selectedKey, setSelectedKey] = useState(
     localStorage.getItem("selectedkey") || location.key

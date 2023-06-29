@@ -3,28 +3,23 @@ import { Form, Input, Col, Button, Row, Spin, message } from "antd";
 import axios from "axios";
 
 const GetStartedSnippet = (props) => {
-  console.log(props.getCustomer);
   const [form] = Form.useForm();
-  const [subId, setSubId] = useState(null);
-  // const TenantId = JSON.parse(localStorage.getItem("TENANT_ID"));
-  // const productId = JSON.parse(localStorage.getItem("productIds"));
+
   const customerDetails = JSON.parse(localStorage.getItem("customerLogin"));
-  // console.log("eeeee", props.productId, TenantId);
+  const [subcriptionData, setSubcriptionData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
   let array = props?.previewPlan?.find(
     (id) => id?.planId === props?.selectedPlan
   );
+
   let priceSlab = array?.response?.find(
     (priceId) => priceId?.periodInText === props?.selectedPrice
   );
+
   useEffect(() => {
-    let getCustData = props?.getCustomer?.find(
-      (cust) => cust?.customerEmail === customerDetails?.email
-    );
-    setSubId(getCustData?.subscriptionId);
-  }, [subId]);
-  // console.log(subid);
-  console.log(subId, props.getCustomer, props.subId);
+    setSubcriptionData(props.subscriptionDetails);
+  }, [props.subId]);
 
   const onFinish = async (values) => {
     setIsLoading(true);
@@ -39,7 +34,7 @@ const GetStartedSnippet = (props) => {
         priceSlabId: priceSlab.priceSlabId,
       },
     };
-    if (props.getCustomer) {
+    if (props.existingCustomer && props.planIds && !props.priceSlabId) {
       try {
         await axios.put(
           `https://ss.api.hutechlabs.com/api/v1/tenant/${props.tenantId}/product/${props.productId}/subscription/${props.subId}`,
@@ -48,9 +43,10 @@ const GetStartedSnippet = (props) => {
         setIsLoading(false);
         props.onCancel();
         form.resetFields();
+        props.getAllCustomer();
         message.success("Subscription updated successfully");
       } catch (error) {
-        message.error("Subscription is already updated");
+        console.log("error", error);
         props.onCancel();
       }
     } else {
@@ -64,12 +60,14 @@ const GetStartedSnippet = (props) => {
 
         props.onCancel();
         form.resetFields();
+        props.getAllCustomer();
         message.success("Subcription Created Sucessfully");
       } catch (error) {
         console.log("error");
       }
     }
   };
+
   useEffect(() => {
     form.setFieldsValue({
       firstname: props?.customerLogin?.fname || customerDetails?.fname,
@@ -83,7 +81,7 @@ const GetStartedSnippet = (props) => {
           priceSlab?.periodInText?.slice(1),
       },
     });
-  }, [props.selectedPlan]);
+  }, [props.selectedPlan, props.selectedPrice]);
 
   if (isLoading) {
     return (

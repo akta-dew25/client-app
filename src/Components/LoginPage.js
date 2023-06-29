@@ -13,11 +13,7 @@ const LoginPage = (props) => {
   const [planIds, setPlanIds] = useState();
   const [currentCustomer, setCurrentCustomer] = useState({});
   const [existingCustomer, setExistingCustomer] = useState(false);
-  //   const [customerDetails, setCustomerDetails] = useState(props.getAllCustomer);
-
-  useEffect(() => {
-    getFilterCustomer();
-  }, [currentCustomer, planIds]);
+  const [priceSlabId, setPriceSlabId] = useState(false);
 
   const onFinish = (values) => {
     let customerLogin = {
@@ -30,30 +26,27 @@ const LoginPage = (props) => {
     localStorage.setItem("customerLogin", JSON.stringify(customerLogin));
     form.resetFields();
     props.setCustomerLogin(false);
+    getFilterCustomer(customerLogin);
     setSubcription(true);
+    props.getAllCustomer();
   };
 
-  const getFilterCustomer = () => {
-    const filterCustomer = props?.getAllCustomer?.some(
-      (cust) => cust.customerEmail === currentCustomer.email
+  const getFilterCustomer = (customerLogin) => {
+    const filterCustomer = props?.subscriptionDetails?.some(
+      (cust) => cust.customerEmail === customerLogin.email
     );
     setExistingCustomer(filterCustomer);
-    const filterplanId = props?.getAllCustomer?.some(
+    const filterplanId = props?.subscriptionDetails?.some(
       (id) => id.planId === props.selectedPlan
     );
 
-    console.log(filterplanId);
     setPlanIds(filterplanId);
+    const filterPriceId = props?.subscriptionDetails?.some(
+      (price) => price.priceslabsId === props?.priceId
+    );
+
+    setPriceSlabId(filterPriceId);
   };
-  console.log(
-    "testingg",
-    existingCustomer,
-    planIds,
-    props.subStatus,
-    props.previewPlan,
-    props.selectedPlan,
-    props.getAllCustomer.some((id) => id.subscriptionStatus === false)
-  );
 
   return (
     <>
@@ -140,9 +133,9 @@ const LoginPage = (props) => {
       </div>
       <Modal
         title={
-          existingCustomer && props.subStatus
+          existingCustomer && planIds && (!priceSlabId || !props.subStatus)
             ? "Upgrade/Downgrade Subcription"
-            : props.subStatus === false && existingCustomer
+            : planIds && existingCustomer && priceSlabId && props.subStatus
             ? null
             : "Create Subscriptions"
         }
@@ -181,7 +174,7 @@ const LoginPage = (props) => {
         }
         className="viewModal"
       >
-        {existingCustomer && planIds && props.subStatus === true ? (
+        {existingCustomer && planIds && priceSlabId && props.subStatus ? (
           <div
             style={{
               display: "flex",
@@ -189,33 +182,7 @@ const LoginPage = (props) => {
               alignItems: "center",
             }}
           >
-            <h1>You can upgrade or downgrade your subscription plan</h1>
-
-            <Button
-              style={{
-                width: "97px",
-                marginTop: "5rem",
-                background:
-                  "linear-gradient(121.06deg, #5b92e5 20.17%, #2087c0 95.26%",
-                color: "#ffffff",
-              }}
-              onClick={() => setSubcription(false)}
-            >
-              Ok
-            </Button>
-          </div>
-        ) : existingCustomer && planIds && props.subStatus === false ? (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <h1>
-              You can't upgrade or downgrade your subscription plan through this
-              plan
-            </h1>
+            <h1> Dear Customer, Your plan is not due for renewal right now.</h1>
 
             <Button
               style={{
@@ -237,10 +204,13 @@ const LoginPage = (props) => {
             previewPlan={props.previewPlan}
             selectedPlan={props.selectedPlan}
             selectedPrice={props.selectedPrice}
+            subscriptionDetails={props?.subscriptionDetails}
             tenantId={props.tenantId}
             productId={props.productId}
             subId={props?.subId}
-            subStatus={props?.subStatus}
+            priceSlabId={props?.priceSlabId}
+            planIds={props?.planIds}
+            existingCustomer={props?.existingCustomer}
           />
         )}
       </Modal>

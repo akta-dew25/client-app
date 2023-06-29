@@ -37,10 +37,11 @@ const PreviewPlanSnippet = () => {
   const [customerLogin, setCustomerLogin] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(2);
   const [selectedPrice, setSelectedPrice] = useState();
-  const [subId, setSubId] = useState("");
+  const [subId, setSubId] = useState();
   const [subStatus, setSubStatus] = useState();
   const [selectedCurrency, setSelectedCurrency] = useState("INR");
   const [previewPlan, setPreviewPlan] = useState([]);
+  const [priceId, setPriceId] = useState();
   const [isRotated, setIsRotated] = useState(false);
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -48,12 +49,15 @@ const PreviewPlanSnippet = () => {
   const checkboxHeight = 40;
   const numCheckboxes = previewPlan[0]?.entitlements.length;
   const totalHeight = checkboxHeight * numCheckboxes;
-  const [getCustomer, setGetCustomer] = useState([]);
+  const [subscriptionDetails, setSubscriptionDetails] = useState([]);
   const [productId, setProductId] = useState("");
   const [customerDetails, setCustomerDetails] = useState({});
   const [tenantId, setTenantId] = useState();
+  const [existingCustomer, setExistingCustomer] = useState(false);
+  const [planIds, setPlanIds] = useState(false);
+  const [isPriceSlabIdSame, setIsPriceSlabIdSame] = useState(false);
+
   const [serParams, _] = useSearchParams();
-  let parseData = JSON.parse(localStorage.getItem("customerLogin") || null);
 
   useEffect(() => {
     let apiKey = window.location.search.split("=")[1];
@@ -81,7 +85,6 @@ const PreviewPlanSnippet = () => {
       );
       const tenantIds = allPlans?.data?.tenantId;
       const productIds = allPlans?.data?.productId;
-      console.log("planlist;;;", allPlans?.data?.plans, tenantIds, productIds);
       setProductId(productIds);
       setTenantId(tenantIds);
       const finalplans = [];
@@ -111,29 +114,18 @@ const PreviewPlanSnippet = () => {
       console.log("error;;;", error);
     }
   };
-  console.log("customerdetahshsh", previewPlan);
-  // const getAllCustomer = async () => {
-
-  // };
-
-  const getAllCustomer = useCallback(async () => {
+  const getAllCustomer = async () => {
     try {
       let customer = await axios.get(
         `https://ss.api.hutechlabs.com/api/v1/product/${productId}`,
         { headers: { "Cache-Control": "no-cache" } }
       );
       // message.info(JSON.stringify(customer.data), 10000);
-      setGetCustomer(customer?.data);
+      setSubscriptionDetails(customer?.data);
     } catch (error) {
       message.error("error");
     }
-  }, [getCustomer, productId]);
-
-  console.log(
-    "customerss",
-    getCustomer,
-    getCustomer.map((status) => status.subscriptionStatus)
-  );
+  };
 
   const navigate = useNavigate();
 
@@ -169,9 +161,6 @@ const PreviewPlanSnippet = () => {
     fetchExchangeRate();
   };
 
-  const handleSelectPlan = (id) => {
-    setSelectedPlan(id);
-  };
   const handleRadioChange = (value) => {
     setSelectedPrice(value);
     setIsRotated(true);
@@ -382,56 +371,17 @@ const PreviewPlanSnippet = () => {
           </Col>
         </Row>
         <Col
-          span={24}
+          xl={{ span: 22, offset: 1 }}
           style={{
             marginTop: "20px",
           }}
           className="table-col"
         >
-          {/* {previewPlan.length > 3 && scrollLeft > 0 && (
-            <>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "16px",
-                  color: "#08c",
-                }}
-                className="scroll-button left"
-                onClick={handleScrollLeft}
-              >
-                <>
-                  <ArrowLeftOutlined />
-                </>
-
-                &lt;
-              </div>
-            </>
-          )} */}
-
-          {/* {previewPlan.length > 3 && TotalRight > 0 && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "16px",
-                color: "#08c",
-              }}
-              className="scroll-button right"
-              onClick={handleScrollRight}
-            >
-              <ArrowRightOutlined />
-              &gt;
-            </div>
-          )} */}
           <Swiper
             breakpoints={{
               320: { slidesPerView: 1, spaceBetween: 5 },
               480: { slidesPerView: 1, spaceBetween: 10 },
               768: { slidesPerView: 3, spaceBetween: 30 },
-              900: { slidesPerView: 2, spaceBetween: 30 },
               1024: { slidesPerView: 3, spaceBetween: 0 },
             }}
             // slidesPerView={3}
@@ -654,7 +604,7 @@ const PreviewPlanSnippet = () => {
                                 })}
                             </div>
 
-                            <div style={{ minHeight: "65px" }}>
+                            <div style={{ minHeight: "auto" }}>
                               <span
                                 className="fee-discription"
                                 style={
@@ -792,33 +742,78 @@ const PreviewPlanSnippet = () => {
                           </Col>
                         </div>
 
-                        <div>
+                        <div
+                        // style={
+                        //   plan.customPlanStatus === true
+                        //     ? { display: "none" }
+                        //     : {}
+                        // }
+                        >
                           <Button
                             className="previewPlan-button-add"
                             onClick={() => {
-                              handleSelectPlan(plan.planId);
+                              setSelectedPlan(plan.planId);
 
-                              const tempSubId = getCustomer.filter(
-                                (id) => id?.planId === plan?.planId
+                              const tempSelectedPeriod = plan?.response?.find(
+                                (period) =>
+                                  period.periodInText === selectedPrice
                               );
 
-                              setSubId(
-                                getCustomer?.filter(
-                                  (c) => c?.subscriptionStatus
-                                )?.[0]?.subscriptionId
+                              setPriceId(tempSelectedPeriod?.priceSlabId);
+                              let parseData = JSON.parse(
+                                localStorage.getItem("customerLogin") || null
                               );
-                              setSubStatus(tempSubId[0]?.subscriptionStatus);
+
+                              const filterCustomer =
+                                subscriptionDetails?.filter(
+                                  (cust) =>
+                                    cust.customerEmail === parseData?.email
+                                );
+                              setExistingCustomer(filterCustomer.length > 0);
+
+                              const isSlabIdSame = filterCustomer.some(
+                                (customer) =>
+                                  customer?.priceslabsId ===
+                                  tempSelectedPeriod.priceSlabId
+                              );
+
+                              setIsPriceSlabIdSame(isSlabIdSame);
+                              setCustomerDetails(parseData);
+
+                              const filterplanId = subscriptionDetails?.some(
+                                (id) => id.planId === plan.planId
+                              );
+                              setPlanIds(filterplanId);
+
+                              const subscriptionIds = subscriptionDetails?.find(
+                                (subId) => subId?.planId === plan.planId
+                              );
+                              setSubId(subscriptionIds?.subscriptionId);
+
+                              const subcriptionStatus =
+                                subscriptionDetails?.find(
+                                  (substs) =>
+                                    substs.priceslabsId ===
+                                    tempSelectedPeriod.priceSlabId
+                                );
+
+                              setSubStatus(
+                                subcriptionStatus?.subscriptionStatus
+                              );
 
                               setCustomerLogin(true);
-                              setCustomerDetails(parseData);
                             }}
                             style={
                               selectedPlan === plan.planId
                                 ? { background: "#fff", color: "#000" }
+                                : plan.customPlanStatus === true
+                                ? { visibility: "hidden" }
                                 : { buttonStyle }
                             }
                           >
-                            <span>{plan.button || "Get Started"}</span>
+                            {plan.customPlanStatus === true ? null : (
+                              <span>{plan.button || "Get Started"}</span>
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -835,10 +830,12 @@ const PreviewPlanSnippet = () => {
         title={
           customerDetails === null
             ? "Customer Login"
-            : subStatus === false
+            : existingCustomer && planIds && isPriceSlabIdSame && subStatus
             ? null
-            : getCustomer
+            : existingCustomer && planIds && (!isPriceSlabIdSame || !subStatus)
             ? "Upgrade/Downgrade Subscription"
+            : existingCustomer && !planIds && !isPriceSlabIdSame && !subStatus
+            ? "Create Subscription"
             : null
         }
         footer={null}
@@ -875,60 +872,135 @@ const PreviewPlanSnippet = () => {
         }
         className="viewModal"
       >
-        {customerDetails === null ? (
-          <LoginPage
-            onCancel={() => setCustomerLogin(false)}
-            setCustomerLogin={setCustomerLogin}
-            getAllCustomer={getCustomer}
-            previewPlan={previewPlan}
-            selectedPlan={selectedPlan}
-            selectedPrice={selectedPrice}
-            customerDetails={customerDetails}
-            subId={subId}
-            tenantId={tenantId}
-            productId={productId}
-            planList={previewPlan}
-            subStatus={subStatus}
-          />
-        ) : subStatus === false ? (
-          <h1>testing</h1>
-        ) : subStatus === true ? (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <h1>You can upgrade or downgrade your subscription plan</h1>
-
-            <Button
+        {
+          customerDetails === null ? (
+            <LoginPage
+              onCancel={() => setCustomerLogin(false)}
+              setCustomerLogin={setCustomerLogin}
+              getAllCustomer={getAllCustomer}
+              subscriptionDetails={subscriptionDetails}
+              previewPlan={previewPlan}
+              selectedPlan={selectedPlan}
+              selectedPrice={selectedPrice}
+              customerDetails={customerDetails}
+              priceId={priceId}
+              tenantId={tenantId}
+              productId={productId}
+              planList={previewPlan}
+              subId={subId}
+              existingCustomer={existingCustomer}
+              priceSlabId={isPriceSlabIdSame}
+              planIds={planIds}
+              subStatus={subStatus}
+            />
+          ) : existingCustomer && planIds && isPriceSlabIdSame && subStatus ? (
+            <div
               style={{
-                width: "97px",
-                marginTop: "5rem",
-                background:
-                  "linear-gradient(121.06deg, #5b92e5 20.17%, #2087c0 95.26%",
-                color: "#ffffff",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
               }}
-              onClick={() => setCustomerLogin(false)}
             >
-              Ok
-            </Button>
-          </div>
-        ) : (
-          <GetStartedSnippet
-            onCancel={() => setCustomerLogin(false)}
-            getCustomer={getCustomer}
-            previewPlan={previewPlan}
-            selectedPlan={selectedPlan}
-            selectedPrice={selectedPrice}
-            tenantId={tenantId}
-            subId={subId}
-            productId={productId}
-            planList={previewPlan}
-            subStatus={subStatus}
-          />
-        )}
+              <h1>
+                Dear Customer, Your plan is not due for renewal right now.
+              </h1>
+
+              <Button
+                style={{
+                  width: "97px",
+                  marginTop: "5rem",
+                  background:
+                    "linear-gradient(121.06deg, #5b92e5 20.17%, #2087c0 95.26%",
+                  color: "#ffffff",
+                }}
+                onClick={() => setCustomerLogin(false)}
+              >
+                Ok
+              </Button>
+            </div>
+          ) : (
+            <GetStartedSnippet
+              onCancel={() => setCustomerLogin(false)}
+              subscriptionDetails={subscriptionDetails}
+              getAllCustomer={getAllCustomer}
+              previewPlan={previewPlan}
+              selectedPlan={selectedPlan}
+              selectedPrice={selectedPrice}
+              tenantId={tenantId}
+              existingCustomer={existingCustomer}
+              priceSlabId={isPriceSlabIdSame}
+              planIds={planIds}
+              priceId={priceId}
+              productId={productId}
+              planList={previewPlan}
+              subId={subId}
+              subStatus={subStatus}
+            />
+          )
+          // subStatus === false ? (
+          //   <div
+          //     style={{
+          //       display: "flex",
+          //       flexDirection: "column",
+          //       alignItems: "center",
+          //     }}
+          //   >
+          //     <h1>
+          //       You can't upgrade or downgrade your subscription plan through this
+          //       plan
+          //     </h1>
+
+          //     <Button
+          //       style={{
+          //         width: "97px",
+          //         marginTop: "5rem",
+          //         background:
+          //           "linear-gradient(121.06deg, #5b92e5 20.17%, #2087c0 95.26%",
+          //         color: "#ffffff",
+          //       }}
+          //       onClick={() => setCustomerLogin(false)}
+          //     >
+          //       Ok
+          //     </Button>
+          //   </div>
+          // ) : subStatus === true ? (
+          //   <div
+          //     style={{
+          //       display: "flex",
+          //       flexDirection: "column",
+          //       alignItems: "center",
+          //     }}
+          //   >
+          //     <h1>You can upgrade or downgrade your subscription plan</h1>
+
+          //     <Button
+          //       style={{
+          //         width: "97px",
+          //         marginTop: "5rem",
+          //         background:
+          //           "linear-gradient(121.06deg, #5b92e5 20.17%, #2087c0 95.26%",
+          //         color: "#ffffff",
+          //       }}
+          //       onClick={() => setCustomerLogin(false)}
+          //     >
+          //       Ok
+          //     </Button>
+          //   </div>
+          // ) : (
+          //   <GetStartedSnippet
+          //     onCancel={() => setCustomerLogin(false)}
+          //     subscriptionDetails={subscriptionDetails}
+          //     previewPlan={previewPlan}
+          //     selectedPlan={selectedPlan}
+          //     selectedPrice={selectedPrice}
+          //     tenantId={tenantId}
+          //     priceId={priceId}
+          //     productId={productId}
+          //     planList={previewPlan}
+          //     subStatus={subStatus}
+          //   />
+          // )
+        }
       </Modal>
 
       <Modal
