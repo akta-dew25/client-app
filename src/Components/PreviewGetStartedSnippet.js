@@ -34,7 +34,11 @@ const GetStartedSnippet = (props) => {
         priceSlabId: priceSlab.priceSlabId,
       },
     };
-    if (props.existingCustomer && props.planIds && !props.priceSlabId) {
+    if (
+      props.existingCustomer &&
+      props.planIds &&
+      (!props.priceSlabId || !props.subStatus)
+    ) {
       try {
         await axios.put(
           `https://ss.api.hutechlabs.com/api/v1/tenant/${props.tenantId}/product/${props.productId}/subscription/${props.subId}`,
@@ -43,7 +47,7 @@ const GetStartedSnippet = (props) => {
         setIsLoading(false);
         props.onCancel();
         form.resetFields();
-        props.getAllCustomer();
+        await props.getAllCustomer();
         message.success("Subscription updated successfully");
       } catch (error) {
         console.log("error", error);
@@ -60,10 +64,10 @@ const GetStartedSnippet = (props) => {
 
         props.onCancel();
         form.resetFields();
-        props.getAllCustomer();
+        await props.getAllCustomer();
         message.success("Subcription Created Sucessfully");
       } catch (error) {
-        console.log("error");
+        console.log("error", error);
       }
     }
   };

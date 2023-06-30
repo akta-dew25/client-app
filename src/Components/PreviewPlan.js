@@ -38,7 +38,7 @@ const PreviewPlanSnippet = () => {
   const [selectedPlan, setSelectedPlan] = useState(2);
   const [selectedPrice, setSelectedPrice] = useState();
   const [subId, setSubId] = useState();
-  const [subStatus, setSubStatus] = useState();
+  const [subStatus, setSubStatus] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState("INR");
   const [previewPlan, setPreviewPlan] = useState([]);
   const [priceId, setPriceId] = useState();
@@ -287,6 +287,28 @@ const PreviewPlanSnippet = () => {
     );
   }
 
+  const getLatestStatus = (subscriptions, priceid) => {
+    let parseData = JSON.parse(localStorage.getItem("customerLogin") || null);
+    const email = parseData?.email;
+    const filteredsubscriptions = subscriptions
+      .filter((sub) => {
+        return sub?.customerEmail === email && sub?.priceslabsId === priceid;
+      })
+      .sort((a, b) => {
+        const tempa = Number(a.subscriptionId.replace("SUB", ""));
+        const tempb = Number(a.subscriptionId.replace("SUB", ""));
+        if (tempa > tempb) {
+          return 1;
+        }
+        return -1;
+      });
+    console.log(filteredsubscriptions[0]?.subscriptionStatus);
+
+    if (filteredsubscriptions[0]?.subscriptionStatus === undefined) {
+      return false;
+    }
+    return filteredsubscriptions[0]?.subscriptionStatus;
+  };
   return (
     <>
       <div className="preview-plan">
@@ -780,25 +802,42 @@ const PreviewPlanSnippet = () => {
                               setIsPriceSlabIdSame(isSlabIdSame);
                               setCustomerDetails(parseData);
 
-                              const filterplanId = subscriptionDetails?.some(
-                                (id) => id.planId === plan.planId
-                              );
-                              setPlanIds(filterplanId);
-
                               const subscriptionIds = subscriptionDetails?.find(
-                                (subId) => subId?.planId === plan.planId
+                                (subId) =>
+                                  subId?.planId === plan.planId &&
+                                  subId.customerEmail === parseData?.email
                               );
+
+                              setPlanIds(!!subscriptionIds);
+
                               setSubId(subscriptionIds?.subscriptionId);
 
-                              const subcriptionStatus =
-                                subscriptionDetails?.find(
-                                  (substs) =>
-                                    substs.priceslabsId ===
-                                    tempSelectedPeriod.priceSlabId
-                                );
+                              console.log(
+                                "tempSelectedPeriod:: ",
+                                tempSelectedPeriod
+                              );
+                              console.log(
+                                "subscriptionDetails:: ",
+                                subscriptionDetails
+                              );
+                              // const subcriptionStatus =
+                              //   subscriptionDetails?.find(
+                              //     (substs) =>
+                              //       substs.priceslabsId ===
+                              //         tempSelectedPeriod.priceSlabId &&
+                              //       substs?.customerEmail === parseData?.email
+                              //   );
 
+                              // console.log(
+                              //   "subcriptionStatus::: ",
+                              //   subcriptionStatus
+                              // );
                               setSubStatus(
-                                subcriptionStatus?.subscriptionStatus
+                                // subcriptionStatus?.subscriptionStatus
+                                getLatestStatus(
+                                  subscriptionDetails,
+                                  tempSelectedPeriod.priceSlabId
+                                )
                               );
 
                               setCustomerLogin(true);

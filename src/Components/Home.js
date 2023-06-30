@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Breadcrumb, Layout, Menu, Button } from "antd";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import AuthContext from "../ContextApis/login";
 
 const { Header, Content, Footer } = Layout;
 
@@ -20,6 +21,9 @@ const items = [
 ];
 const App = (props) => {
   const location = useLocation();
+  const loginctx = useContext(AuthContext);
+  const [loginDetails, setLoginDetails] = useState(null);
+
   const [selectedKey, setSelectedKey] = useState(
     localStorage.getItem("selectedkey") || location.key
   );
@@ -28,8 +32,19 @@ const App = (props) => {
   const handleLogout = () => {
     localStorage.removeItem("customerLogin");
     localStorage.removeItem("selectedkey");
+    loginctx.setisLogin(false);
     navigate("/");
+    // window.location.reload();
   };
+
+  useEffect(() => {
+    let parseData = JSON.parse(localStorage.getItem("customerLogin"));
+    console.log("loginn", loginDetails);
+
+    if (parseData) {
+      setLoginDetails(parseData);
+    }
+  }, []);
 
   useEffect(() => {
     setSelectedKey(location.pathname);
@@ -80,13 +95,16 @@ const App = (props) => {
             </Menu>
           </div>
           {/* {loggedIn ? ( */}
-          <Button
-            type="primary"
-            onClick={handleLogout}
-            style={{ color: "white", width: "100px" }}
-          >
-            Logout
-          </Button>
+          {loginctx.islogin && (
+            <Button
+              type="primary"
+              onClick={handleLogout}
+              style={{ color: "white", width: "100px" }}
+            >
+              Logout
+            </Button>
+          )}
+
           {/* ) : ( */}
           {/* <Button
               type="primary"

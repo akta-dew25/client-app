@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Form, Input, Button, Typography, message, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import bghero from "../Image/bg-hero.jpg";
+import AuthContext from "../ContextApis/login";
 import GetStartedSnippet from "./PreviewGetStartedSnippet";
 
 const { Title } = Typography;
 
 const LoginPage = (props) => {
+  const loginctx = useContext(AuthContext);
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [subcription, setSubcription] = useState(false);
@@ -14,7 +16,7 @@ const LoginPage = (props) => {
   const [currentCustomer, setCurrentCustomer] = useState({});
   const [existingCustomer, setExistingCustomer] = useState(false);
   const [priceSlabId, setPriceSlabId] = useState(false);
-
+  console.log(props.subStatus);
   const onFinish = (values) => {
     let customerLogin = {
       fname: values.fname,
@@ -24,11 +26,15 @@ const LoginPage = (props) => {
     };
     setCurrentCustomer(customerLogin);
     localStorage.setItem("customerLogin", JSON.stringify(customerLogin));
+    loginctx.setisLogin(true);
+    message.success("Login Successfully");
     form.resetFields();
     props.setCustomerLogin(false);
     getFilterCustomer(customerLogin);
-    setSubcription(true);
+
+    // setSubcription(true);
     props.getAllCustomer();
+    // window.location.reload();
   };
 
   const getFilterCustomer = (customerLogin) => {
@@ -131,7 +137,7 @@ const LoginPage = (props) => {
           </Form>
         </div>
       </div>
-      <Modal
+      {/* <Modal
         title={
           existingCustomer && planIds && (!priceSlabId || !props.subStatus)
             ? "Upgrade/Downgrade Subcription"
@@ -200,6 +206,7 @@ const LoginPage = (props) => {
         ) : (
           <GetStartedSnippet
             onCancel={() => setSubcription(false)}
+            getAllCustomer={props.getAllCustomer}
             customerLogin={currentCustomer}
             previewPlan={props.previewPlan}
             selectedPlan={props.selectedPlan}
@@ -208,12 +215,13 @@ const LoginPage = (props) => {
             tenantId={props.tenantId}
             productId={props.productId}
             subId={props?.subId}
-            priceSlabId={props?.priceSlabId}
-            planIds={props?.planIds}
-            existingCustomer={props?.existingCustomer}
+            priceSlabId={priceSlabId}
+            planIds={planIds}
+            existingCustomer={existingCustomer}
+            subStatus={props.subStatus}
           />
         )}
-      </Modal>
+      </Modal> */}
     </>
   );
 };
