@@ -32,7 +32,7 @@ const LoginPage = (props) => {
     props.setCustomerLogin(false);
     getFilterCustomer(customerLogin);
 
-    // setSubcription(true);
+    setSubcription(true);
     props.getAllCustomer();
     // window.location.reload();
   };
@@ -137,9 +137,9 @@ const LoginPage = (props) => {
           </Form>
         </div>
       </div>
-      {/* <Modal
+      <Modal
         title={
-          existingCustomer && planIds && (!priceSlabId || !props.subStatus)
+          existingCustomer && (planIds || !priceSlabId || !props.subStatus)
             ? "Upgrade/Downgrade Subcription"
             : planIds && existingCustomer && priceSlabId && props.subStatus
             ? null
@@ -221,7 +221,7 @@ const LoginPage = (props) => {
             subStatus={props.subStatus}
           />
         )}
-      </Modal> */}
+      </Modal>
     </>
   );
 };

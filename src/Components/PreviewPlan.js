@@ -791,7 +791,9 @@ const PreviewPlanSnippet = () => {
                                   (cust) =>
                                     cust.customerEmail === parseData?.email
                                 );
-                              setExistingCustomer(filterCustomer.length > 0);
+                              setExistingCustomer(
+                                filterCustomer.length > 0 || filterCustomer
+                              );
 
                               const isSlabIdSame = filterCustomer.some(
                                 (customer) =>
@@ -804,12 +806,12 @@ const PreviewPlanSnippet = () => {
 
                               const subscriptionIds = subscriptionDetails?.find(
                                 (subId) =>
-                                  subId?.planId === plan.planId &&
-                                  subId.customerEmail === parseData?.email
+                                  subId?.subscriptionStatus === true &&
+                                  subId?.customerEmail === parseData?.email
                               );
 
                               setPlanIds(!!subscriptionIds);
-
+                              console.log("subidd", subscriptionIds);
                               setSubId(subscriptionIds?.subscriptionId);
 
                               console.log(
@@ -820,24 +822,31 @@ const PreviewPlanSnippet = () => {
                                 "subscriptionDetails:: ",
                                 subscriptionDetails
                               );
-                              // const subcriptionStatus =
-                              //   subscriptionDetails?.find(
-                              //     (substs) =>
-                              //       substs.priceslabsId ===
-                              //         tempSelectedPeriod.priceSlabId &&
-                              //       substs?.customerEmail === parseData?.email
-                              //   );
+                              const subcriptionStatus =
+                                subscriptionDetails?.find(
+                                  (substs) =>
+                                    substs.priceslabsId ===
+                                      tempSelectedPeriod.priceSlabId &&
+                                    substs?.customerEmail === parseData?.email
+                                );
 
                               // console.log(
                               //   "subcriptionStatus::: ",
                               //   subcriptionStatus
                               // );
                               setSubStatus(
-                                // subcriptionStatus?.subscriptionStatus
-                                getLatestStatus(
-                                  subscriptionDetails,
-                                  tempSelectedPeriod.priceSlabId
-                                )
+                                subcriptionStatus?.subscriptionStatus
+                                // getLatestStatus(
+                                //   subscriptionDetails,
+                                //   tempSelectedPeriod.priceSlabId
+                                // )
+                              );
+                              console.log(
+                                "test",
+                                existingCustomer,
+                                !planIds,
+                                !isPriceSlabIdSame,
+                                !subStatus
                               );
 
                               setCustomerLogin(true);
@@ -871,7 +880,7 @@ const PreviewPlanSnippet = () => {
             ? "Customer Login"
             : existingCustomer && planIds && isPriceSlabIdSame && subStatus
             ? null
-            : existingCustomer && planIds && (!isPriceSlabIdSame || !subStatus)
+            : existingCustomer && (planIds || !isPriceSlabIdSame || !subStatus)
             ? "Upgrade/Downgrade Subscription"
             : existingCustomer && !planIds && !isPriceSlabIdSame && !subStatus
             ? "Create Subscription"

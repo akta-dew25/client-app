@@ -36,8 +36,7 @@ const GetStartedSnippet = (props) => {
     };
     if (
       props.existingCustomer &&
-      props.planIds &&
-      (!props.priceSlabId || !props.subStatus)
+      (props.planIds || !props.priceSlabId || !props.subStatus)
     ) {
       try {
         await axios.put(
