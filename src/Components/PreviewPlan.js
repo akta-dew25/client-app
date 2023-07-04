@@ -288,7 +288,7 @@ const PreviewPlanSnippet = () => {
   }
 
   const getLatestStatus = (subscriptions, priceid) => {
-    let parseData = JSON.parse(localStorage.getItem("customerLogin") || null);
+    let parseData = JSON.parse(sessionStorage.getItem("customerLogin") || null);
     const email = parseData?.email;
     const filteredsubscriptions = subscriptions
       .filter((sub) => {
@@ -783,73 +783,53 @@ const PreviewPlanSnippet = () => {
 
                               setPriceId(tempSelectedPeriod?.priceSlabId);
                               let parseData = JSON.parse(
-                                localStorage.getItem("customerLogin") || null
+                                sessionStorage.getItem("customerLogin") || null
                               );
 
-                              const filterCustomer =
-                                subscriptionDetails?.filter(
-                                  (cust) =>
-                                    cust.customerEmail === parseData?.email
-                                );
-                              setExistingCustomer(
-                                filterCustomer.length > 0 || filterCustomer
+                              const filterCustomer = subscriptionDetails?.find(
+                                (cust) =>
+                                  cust.customerEmail === parseData?.email
                               );
+                              console.log(filterCustomer, "cust");
+                              setExistingCustomer(filterCustomer?.length > 0);
 
-                              const isSlabIdSame = filterCustomer.some(
-                                (customer) =>
-                                  customer?.priceslabsId ===
-                                  tempSelectedPeriod.priceSlabId
-                              );
-
-                              setIsPriceSlabIdSame(isSlabIdSame);
+                              // const isSlabIdSame = filterCustomer.some(
+                              //   (customer) =>
+                              //     customer?.priceslabsId ===
+                              //     tempSelectedPeriod.priceSlabId
+                              // );
+                              // console.log("priceidddd", isSlabIdSame);
+                              // setIsPriceSlabIdSame(isSlabIdSame);
                               setCustomerDetails(parseData);
+
+                              const subscriptionStatus =
+                                subscriptionDetails?.find(
+                                  (subId) =>
+                                    subId?.subscriptionStatus === true &&
+                                    subId?.customerEmail === parseData?.email &&
+                                    subId.priceslabsId ===
+                                      tempSelectedPeriod?.priceSlabId
+                                );
+
+                              setSubStatus(
+                                subscriptionStatus?.subscriptionStatus
+                              );
 
                               const subscriptionIds = subscriptionDetails?.find(
                                 (subId) =>
                                   subId?.subscriptionStatus === true &&
                                   subId?.customerEmail === parseData?.email
                               );
-
-                              setPlanIds(!!subscriptionIds);
                               console.log("subidd", subscriptionIds);
                               setSubId(subscriptionIds?.subscriptionId);
 
-                              console.log(
-                                "tempSelectedPeriod:: ",
-                                tempSelectedPeriod
-                              );
-                              console.log(
-                                "subscriptionDetails:: ",
-                                subscriptionDetails
-                              );
-                              const subcriptionStatus =
-                                subscriptionDetails?.find(
-                                  (substs) =>
-                                    substs.priceslabsId ===
-                                      tempSelectedPeriod.priceSlabId &&
-                                    substs?.customerEmail === parseData?.email
-                                );
-
-                              // console.log(
-                              //   "subcriptionStatus::: ",
-                              //   subcriptionStatus
-                              // );
-                              setSubStatus(
-                                subcriptionStatus?.subscriptionStatus
-                                // getLatestStatus(
-                                //   subscriptionDetails,
-                                //   tempSelectedPeriod.priceSlabId
-                                // )
-                              );
-                              console.log(
-                                "test",
-                                existingCustomer,
-                                !planIds,
-                                !isPriceSlabIdSame,
-                                !subStatus
-                              );
-
                               setCustomerLogin(true);
+                              console.log(
+                                "subscriptiondetailss",
+                                subscriptionDetails,
+                                subStatus,
+                                existingCustomer
+                              );
                             }}
                             style={
                               selectedPlan === plan.planId
@@ -878,12 +858,10 @@ const PreviewPlanSnippet = () => {
         title={
           customerDetails === null
             ? "Customer Login"
-            : existingCustomer && planIds && isPriceSlabIdSame && subStatus
-            ? null
-            : existingCustomer && (planIds || !isPriceSlabIdSame || !subStatus)
-            ? "Upgrade/Downgrade Subscription"
-            : existingCustomer && !planIds && !isPriceSlabIdSame && !subStatus
+            : existingCustomer && !subStatus
             ? "Create Subscription"
+            : !subStatus
+            ? "Upgrade/Downgrade Subscription"
             : null
         }
         footer={null}
@@ -941,7 +919,7 @@ const PreviewPlanSnippet = () => {
               planIds={planIds}
               subStatus={subStatus}
             />
-          ) : existingCustomer && planIds && isPriceSlabIdSame && subStatus ? (
+          ) : subStatus ? (
             <div
               style={{
                 display: "flex",

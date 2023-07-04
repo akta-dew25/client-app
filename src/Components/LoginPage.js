@@ -16,6 +16,7 @@ const LoginPage = (props) => {
   const [currentCustomer, setCurrentCustomer] = useState({});
   const [existingCustomer, setExistingCustomer] = useState(false);
   const [priceSlabId, setPriceSlabId] = useState(false);
+  const [subStatus, setSubStatus] = useState(false);
   console.log(props.subStatus);
   const onFinish = (values) => {
     let customerLogin = {
@@ -25,7 +26,7 @@ const LoginPage = (props) => {
       contact: values.contact,
     };
     setCurrentCustomer(customerLogin);
-    localStorage.setItem("customerLogin", JSON.stringify(customerLogin));
+    sessionStorage.setItem("customerLogin", JSON.stringify(customerLogin));
     loginctx.setisLogin(true);
     message.success("Login Successfully");
     form.resetFields();
@@ -48,11 +49,29 @@ const LoginPage = (props) => {
 
     setPlanIds(filterplanId);
     const filterPriceId = props?.subscriptionDetails?.some(
-      (price) => price.priceslabsId === props?.priceId
+      (price) =>
+        price.priceslabsId === props?.priceId && price.subscriptionStatus
     );
 
     setPriceSlabId(filterPriceId);
+
+    const subcriptionStatus = props.subscriptionDetails?.find(
+      (substs) =>
+        substs.subscriptionStatus === true &&
+        substs?.customerEmail === customerLogin.email &&
+        substs.priceslabsId === props?.priceId
+    );
+
+    setSubStatus(subcriptionStatus?.subscriptionStatus);
   };
+
+  console.log(
+    "existingCustomer",
+    existingCustomer,
+    // planIds,
+    // priceSlabId,
+    subStatus
+  );
 
   return (
     <>
@@ -108,7 +127,7 @@ const LoginPage = (props) => {
               ]}
               className="customerDetails"
             >
-              <Input placeholder="Email" />
+              <Input placeholder="Email" type="email" />
             </Form.Item>
             <Form.Item
               name="contact"
@@ -116,12 +135,12 @@ const LoginPage = (props) => {
               rules={[
                 {
                   required: true,
-                  message: "Please enter your password!",
+                  message: "Please enter your contact number!",
                 },
               ]}
               className="customerDetails"
             >
-              <Input placeholder="Password" />
+              <Input placeholder="Password" maxLength={10} />
             </Form.Item>
 
             <Form.Item>
@@ -139,11 +158,11 @@ const LoginPage = (props) => {
       </div>
       <Modal
         title={
-          existingCustomer && (planIds || !priceSlabId || !props.subStatus)
+          !existingCustomer && !subStatus
+            ? "Create Subscriptions"
+            : !subStatus
             ? "Upgrade/Downgrade Subcription"
-            : planIds && existingCustomer && priceSlabId && props.subStatus
-            ? null
-            : "Create Subscriptions"
+            : null
         }
         footer={null}
         open={subcription}
@@ -180,7 +199,7 @@ const LoginPage = (props) => {
         }
         className="viewModal"
       >
-        {existingCustomer && planIds && priceSlabId && props.subStatus ? (
+        {subStatus ? (
           <div
             style={{
               display: "flex",
@@ -218,7 +237,7 @@ const LoginPage = (props) => {
             priceSlabId={priceSlabId}
             planIds={planIds}
             existingCustomer={existingCustomer}
-            subStatus={props.subStatus}
+            subStatus={subStatus}
           />
         )}
       </Modal>

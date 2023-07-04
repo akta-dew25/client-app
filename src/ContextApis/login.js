@@ -6,7 +6,7 @@ const AuthContext = createContext({
 });
 
 export const AuthContextProvider = (props) => {
-  const [islogin, setIsLogin] = useState("customerLogin" in localStorage);
+  const [islogin, setIsLogin] = useState("customerLogin" in sessionStorage);
 
   const values = {
     islogin: islogin,

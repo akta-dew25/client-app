@@ -3,9 +3,10 @@ import { Form, Input, Col, Button, Row, Spin, message } from "antd";
 import axios from "axios";
 
 const GetStartedSnippet = (props) => {
+  console.log(props, "propss");
   const [form] = Form.useForm();
 
-  const customerDetails = JSON.parse(localStorage.getItem("customerLogin"));
+  const customerDetails = JSON.parse(sessionStorage.getItem("customerLogin"));
   const [subcriptionData, setSubcriptionData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,6 +21,7 @@ const GetStartedSnippet = (props) => {
   useEffect(() => {
     setSubcriptionData(props.subscriptionDetails);
   }, [props.subId]);
+  console.log("customerdetailss", customerDetails);
 
   const onFinish = async (values) => {
     setIsLoading(true);
@@ -34,10 +36,7 @@ const GetStartedSnippet = (props) => {
         priceSlabId: priceSlab.priceSlabId,
       },
     };
-    if (
-      props.existingCustomer &&
-      (props.planIds || !props.priceSlabId || !props.subStatus)
-    ) {
+    if (props.subId) {
       try {
         await axios.put(
           `https://ss.api.hutechlabs.com/api/v1/tenant/${props.tenantId}/product/${props.productId}/subscription/${props.subId}`,

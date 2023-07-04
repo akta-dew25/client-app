@@ -25,20 +25,20 @@ const App = (props) => {
   const [loginDetails, setLoginDetails] = useState(null);
 
   const [selectedKey, setSelectedKey] = useState(
-    localStorage.getItem("selectedkey") || location.key
+    sessionStorage.getItem("selectedkey") || location.key
   );
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("customerLogin");
-    localStorage.removeItem("selectedkey");
+    sessionStorage.removeItem("customerLogin");
+    sessionStorage.removeItem("selectedkey");
     loginctx.setisLogin(false);
     navigate("/");
     // window.location.reload();
   };
 
   useEffect(() => {
-    let parseData = JSON.parse(localStorage.getItem("customerLogin"));
+    let parseData = JSON.parse(sessionStorage.getItem("customerLogin"));
     console.log("loginn", loginDetails);
 
     if (parseData) {
@@ -49,6 +49,8 @@ const App = (props) => {
   useEffect(() => {
     setSelectedKey(location.pathname);
   }, [location.pathname]);
+
+  console.log(location, "keyss");
 
   return (
     <Layout>
