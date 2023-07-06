@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import bghero from "../Image/bg-hero.jpg";
 import AuthContext from "../ContextApis/login";
 import GetStartedSnippet from "./PreviewGetStartedSnippet";
+import axios from "axios";
 
 const { Title } = Typography;
 
@@ -17,6 +18,10 @@ const LoginPage = (props) => {
   const [existingCustomer, setExistingCustomer] = useState(false);
   const [priceSlabId, setPriceSlabId] = useState(false);
   const [subStatus, setSubStatus] = useState(false);
+  const [subscriptionDetails, setSubscriptionDetails] = useState(
+    props.subscriptionDetails
+  );
+  const [subId, setSubId] = useState(false);
   console.log(props.subStatus);
   const onFinish = (values) => {
     let customerLogin = {
@@ -39,30 +44,70 @@ const LoginPage = (props) => {
   };
 
   const getFilterCustomer = (customerLogin) => {
-    const filterCustomer = props?.subscriptionDetails?.some(
+    const filterCustomer = subscriptionDetails?.some(
       (cust) => cust.customerEmail === customerLogin.email
     );
     setExistingCustomer(filterCustomer);
-    const filterplanId = props?.subscriptionDetails?.some(
+    const filterplanId = subscriptionDetails?.some(
       (id) => id.planId === props.selectedPlan
     );
 
     setPlanIds(filterplanId);
-    const filterPriceId = props?.subscriptionDetails?.some(
+    const filterPriceId = subscriptionDetails?.some(
       (price) =>
         price.priceslabsId === props?.priceId && price.subscriptionStatus
     );
 
     setPriceSlabId(filterPriceId);
 
-    const subcriptionStatus = props.subscriptionDetails?.find(
+    const subcriptionStatus = subscriptionDetails?.find(
       (substs) =>
         substs.subscriptionStatus === true &&
         substs?.customerEmail === customerLogin.email &&
         substs.priceslabsId === props?.priceId
     );
-
+    console.log(subcriptionStatus?.subscriptionStatus);
     setSubStatus(subcriptionStatus?.subscriptionStatus);
+
+    const subscriptionIds = subscriptionDetails.find(
+      (subId) =>
+        subId?.subscriptionStatus === true &&
+        subId?.customerEmail === customerLogin.email
+    );
+
+    console.log(
+      subscriptionIds?.subscriptionId,
+      "loginsubbssb",
+      props.subscriptionDetails,
+      props.subscriptionDetails.find(
+        (name) => name.customerEmail === customerLogin.email
+      ),
+      customerLogin.email
+    );
+    setSubId(subscriptionIds?.subscriptionId);
+  };
+
+  const cancelSubscription = async () => {
+    try {
+      const res = await axios.put(
+        `https://ss.api.hutechlabs.com/api/v1/tenant/${props.tenantId}/product/${props.productId}/subscriptions/${subId}`
+      );
+
+      const tempSub = [...(subscriptionDetails || [])];
+      if (res?.status === 200) {
+        const newSubs = tempSub?.map((s) => ({
+          ...s,
+          subscriptionStatus:
+            s?.subscriptionId === subId ? false : s?.subscriptionStatus,
+        }));
+        setSubscriptionDetails(newSubs);
+      } else {
+      }
+      message.success("Cancelled Subscription");
+      setSubcription(false);
+    } catch (error) {
+      console.log("error", error);
+    }
   };
 
   console.log(
@@ -98,6 +143,10 @@ const LoginPage = (props) => {
                   required: true,
                   message: "Please enter your first name",
                 },
+                {
+                  pattern: /^[a-zA-Z\s]*$/,
+                  message: "Please enter valid name",
+                },
               ]}
               className="customerDetails"
             >
@@ -111,6 +160,10 @@ const LoginPage = (props) => {
                   required: true,
                   message: "Please enter your last name",
                 },
+                {
+                  pattern: /^[a-zA-Z\s]*$/,
+                  message: "Please enter valid name",
+                },
               ]}
               className="customerDetails"
             >
@@ -123,11 +176,12 @@ const LoginPage = (props) => {
                 {
                   required: true,
                   message: "Please enter your email!",
+                  type: "email",
                 },
               ]}
               className="customerDetails"
             >
-              <Input placeholder="Email" type="email" />
+              <Input placeholder="Email Id" type="email" />
             </Form.Item>
             <Form.Item
               name="contact"
@@ -136,11 +190,16 @@ const LoginPage = (props) => {
                 {
                   required: true,
                   message: "Please enter your contact number!",
+                  // type: "number",
+                },
+                {
+                  pattern: /^[0-9]\d{9}$/,
+                  message: "Please enter valid number",
                 },
               ]}
               className="customerDetails"
             >
-              <Input placeholder="Password" maxLength={10} />
+              <Input placeholder="Contact Number" maxLength={10} />
             </Form.Item>
 
             <Form.Item>
@@ -158,11 +217,16 @@ const LoginPage = (props) => {
       </div>
       <Modal
         title={
-          !existingCustomer && !subStatus
-            ? "Create Subscriptions"
-            : !subStatus
-            ? "Upgrade/Downgrade Subcription"
-            : null
+          subStatus
+            ? null
+            : props.subscriptionDetails?.some((s) => s.subcriptionStatus)
+            ? "Upgrade/Downgrade Subscription"
+            : "Create Subscription"
+          // !existingCustomer && !subStatus
+          //   ? "Create Subscriptions"
+          //   : !subStatus
+          //   ? "Upgrade/Downgrade Subcription"
+          //   : null
         }
         footer={null}
         open={subcription}
@@ -192,7 +256,7 @@ const LoginPage = (props) => {
             onClick={() => {
               setSubcription(false);
             }}
-            style={{ color: "#ffffff" }}
+            style={subStatus ? { color: "#000000" } : { color: "#ffffff" }}
           >
             X
           </div>
@@ -211,15 +275,15 @@ const LoginPage = (props) => {
 
             <Button
               style={{
-                width: "97px",
+                width: "152px",
                 marginTop: "5rem",
                 background:
                   "linear-gradient(121.06deg, #5b92e5 20.17%, #2087c0 95.26%",
                 color: "#ffffff",
               }}
-              onClick={() => setSubcription(false)}
+              onClick={() => cancelSubscription()}
             >
-              Ok
+              Cancel Subscription
             </Button>
           </div>
         ) : (

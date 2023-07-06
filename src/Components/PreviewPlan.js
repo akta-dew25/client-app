@@ -56,6 +56,7 @@ const PreviewPlanSnippet = () => {
   const [existingCustomer, setExistingCustomer] = useState(false);
   const [planIds, setPlanIds] = useState(false);
   const [isPriceSlabIdSame, setIsPriceSlabIdSame] = useState(false);
+  const [isActiveStatus, setIsActiveStatus] = useState(false);
 
   const [serParams, _] = useSearchParams();
 
@@ -287,28 +288,27 @@ const PreviewPlanSnippet = () => {
     );
   }
 
-  const getLatestStatus = (subscriptions, priceid) => {
-    let parseData = JSON.parse(sessionStorage.getItem("customerLogin") || null);
-    const email = parseData?.email;
-    const filteredsubscriptions = subscriptions
-      .filter((sub) => {
-        return sub?.customerEmail === email && sub?.priceslabsId === priceid;
-      })
-      .sort((a, b) => {
-        const tempa = Number(a.subscriptionId.replace("SUB", ""));
-        const tempb = Number(a.subscriptionId.replace("SUB", ""));
-        if (tempa > tempb) {
-          return 1;
-        }
-        return -1;
-      });
-    console.log(filteredsubscriptions[0]?.subscriptionStatus);
-
-    if (filteredsubscriptions[0]?.subscriptionStatus === undefined) {
-      return false;
+  const cancelSubscription = async () => {
+    try {
+      const res = await axios.put(
+        `https://ss.api.hutechlabs.com/api/v1/tenant/${tenantId}/product/${productId}/subscriptions/${subId}`
+      );
+      const tempSub = [...(subscriptionDetails || [])];
+      if (res?.status === 200) {
+        const newSubs = tempSub?.map((s) => ({
+          ...s,
+          subscriptionStatus:
+            s?.subscriptionId === subId ? false : s?.subscriptionStatus,
+        }));
+        setSubscriptionDetails(newSubs);
+      }
+      message.success("Cancelled Subscription");
+      setCustomerLogin(false);
+    } catch (error) {
+      console.log("error", error);
     }
-    return filteredsubscriptions[0]?.subscriptionStatus;
   };
+
   return (
     <>
       <div className="preview-plan">
@@ -786,12 +786,14 @@ const PreviewPlanSnippet = () => {
                                 sessionStorage.getItem("customerLogin") || null
                               );
 
-                              const filterCustomer = subscriptionDetails?.find(
+                              const filterCustomer = subscriptionDetails?.some(
                                 (cust) =>
                                   cust.customerEmail === parseData?.email
                               );
                               console.log(filterCustomer, "cust");
-                              setExistingCustomer(filterCustomer?.length > 0);
+                              setExistingCustomer(
+                                filterCustomer?.customerEmail
+                              );
 
                               // const isSlabIdSame = filterCustomer.some(
                               //   (customer) =>
@@ -824,11 +826,23 @@ const PreviewPlanSnippet = () => {
                               setSubId(subscriptionIds?.subscriptionId);
 
                               setCustomerLogin(true);
+
+                              const isOneStatusActive =
+                                subscriptionDetails?.some(
+                                  (s) =>
+                                    s.subscriptionStatus &&
+                                    s.customerEmail === parseData?.email
+                                );
+
+                              setIsActiveStatus(isOneStatusActive);
+
                               console.log(
                                 "subscriptiondetailss",
                                 subscriptionDetails,
                                 subStatus,
-                                existingCustomer
+                                existingCustomer,
+                                subscriptionIds?.subscriptionId,
+                                isOneStatusActive
                               );
                             }}
                             style={
@@ -855,14 +869,24 @@ const PreviewPlanSnippet = () => {
       </div>
 
       <Modal
+        // title={
+        //   customerDetails === null
+        //     ? "Customer Login"
+        //     : existingCustomer && !subStatus
+        //     ? "Create Subscription"
+        //     : !subStatus
+        //     ? "Upgrade/Downgrade Subscription" +
+        //       JSON.stringify({ customerDetails, existingCustomer, subStatus })
+        //     : null
+        // }
         title={
-          customerDetails === null
+          !customerDetails
             ? "Customer Login"
-            : existingCustomer && !subStatus
-            ? "Create Subscription"
-            : !subStatus
+            : subStatus
+            ? null
+            : isActiveStatus
             ? "Upgrade/Downgrade Subscription"
-            : null
+            : "Create Subscription"
         }
         footer={null}
         open={customerLogin}
@@ -891,7 +915,7 @@ const PreviewPlanSnippet = () => {
             onClick={() => {
               setCustomerLogin(false);
             }}
-            style={{ color: "#ffffff" }}
+            style={subStatus ? { color: "#000000" } : { color: "#ffffff" }}
           >
             X
           </div>
@@ -918,6 +942,7 @@ const PreviewPlanSnippet = () => {
               priceSlabId={isPriceSlabIdSame}
               planIds={planIds}
               subStatus={subStatus}
+              cancelSubscription={cancelSubscription}
             />
           ) : subStatus ? (
             <div
@@ -933,15 +958,15 @@ const PreviewPlanSnippet = () => {
 
               <Button
                 style={{
-                  width: "97px",
+                  width: "152px",
                   marginTop: "5rem",
                   background:
                     "linear-gradient(121.06deg, #5b92e5 20.17%, #2087c0 95.26%",
                   color: "#ffffff",
                 }}
-                onClick={() => setCustomerLogin(false)}
+                onClick={() => cancelSubscription()}
               >
-                Ok
+                Cancel Subscription
               </Button>
             </div>
           ) : (
